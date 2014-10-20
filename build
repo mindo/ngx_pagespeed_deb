@@ -3,12 +3,14 @@
 set -x
 
 NPS_VERSION=1.9.32.1
+NGX_DK_VERSION=0.2.19
+LUA_NGX_VERSION=0.9.13rc1
 
 UBUNTU_VERSION=`lsb_release -c | cut -f2`
 
 sudo apt-get install build-essential -y
 sudo apt-get build-dep nginx -y
-sudo apt-get install dpkg-dev build-essential zlib1g-dev libpcre3 libpcre3-dev git unzip libssl-dev -y
+sudo apt-get install dpkg-dev build-essential zlib1g-dev libpcre3 libpcre3-dev git unzip libssl-dev libluajit-5.1-dev liblua5.1-0-dev -y
 
 wget -N http://nginx.org/keys/nginx_signing.key
 sudo apt-key add nginx_signing.key
@@ -51,8 +53,18 @@ cd ngx_pagespeed-release-${NPS_VERSION}-beta/
 wget https://dl.google.com/dl/page-speed/psol/${NPS_VERSION}.tar.gz
 tar -xzvf ${NPS_VERSION}.tar.gz  # extracts to psol/
 
+cd $NGINX_BUILD_DIR/modules
+
+# get ngx dev kit
+wget https://github.com/simpl/ngx_devel_kit/archive/v${NGX_DK_VERSION}.zip
+unzip v${NGX_DK_VERSION}.zip
+
+# get lua nginx module
+wget https://github.com/openresty/lua-nginx-module/archive/v${LUA_NGX_VERSION}.zip
+unzip v${LUA_NGX_VERSION}.zip
+
 # now enable pagespeed module in debian/rules
-sed -i "s/.\/configure /.\/configure --add-module=modules\/ngx_pagespeed-release-${NPS_VERSION}-beta /g" $NGINX_BUILD_DIR/debian/rules
+sed -i "s/.\/configure /.\/configure --add-module=modules\/ngx_pagespeed-release-${NPS_VERSION}-beta --add-module=modules\/ngx_devel_kit-${NGX_DK_VERSION} --add-module=modules\/lua-nginx-module-${LUA_NGX_VERSION} /g" $NGINX_BUILD_DIR/debian/rules
 
 # build deb
 cd $NGINX_BUILD_DIR
